@@ -84,12 +84,34 @@ let
     cp ${gemFiles.lockfile} $out/Gemfile.lock || ls -l $out/Gemfile.lock
   '';
 
+  myPathDerivation = { gemName, version, path, ... }:
+    let
+      myDir = runCommand "yo" {} ''
+        set -x
+        gemPath=$out/${ruby.gemPath}/gems/${gemName}-${version}
+        mkdir -p $gemPath
+        mkdir -p $out/bin
+        cp -rp "${path}"/* "$gemPath/"
+        [ -d "${path}"/bin ] && cp -rp "${path}"/bin/* $out/bin/
+        echo ok
+      '';
+    in {
+      type = "derivation";
+      bundledByPath = true;
+      name = gemName;
+      version = version;
+      outPath = myDir;
+      outputs = [ "out" ];
+      out = myDir;
+      outputName = "out";
+    };
+
   buildGem = name: attrs: (
     let
       gemAttrs = composeGemAttrs ruby gems name attrs;
     in
     if gemAttrs.type == "path" then
-      pathDerivation (gemAttrs.source // gemAttrs)
+      myPathDerivation (gemAttrs.source // gemAttrs)
     else
       buildRubyGem gemAttrs
   );
@@ -101,7 +123,7 @@ let
 
     name = name';
 
-    paths = envPaths;
+    paths = builtins.trace envPaths envPaths;
     pathsToLink = [ "/lib" ];
 
     postBuild = genStubsScript (defs // args // {
