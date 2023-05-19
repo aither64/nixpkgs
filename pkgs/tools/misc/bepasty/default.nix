@@ -1,5 +1,7 @@
 { python3
 , lib
+, fetchFromGitHub
+, git
 }:
 #We need to use buildPythonPackage here to get the PYTHONPATH build correctly.
 #This is needed for services.bepasty
@@ -23,11 +25,15 @@ with python3.pkgs; buildPythonPackage rec {
     xstatic-pygments
   ];
 
+  nativeBuildInputs = [ git ];
   buildInputs = [ setuptools-scm ];
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "sha256-f5tRq48tCqjzOGq7Z2T2U1zwQN121N9ap+xPxHWZyvU=";
+  src = fetchFromGitHub {
+    owner = "aither64";
+    repo = "bepasty-server";
+    rev = "d09478b1d5a6c959844faec02595f16efc5bbe07";
+    sha256 = "sha256-787vFJn22oTWcqsXMiEGasf90Bt+VmKlBjoO70jr9X0=";
+    leaveDotGit = true;
   };
 
   nativeCheckInputs = [
