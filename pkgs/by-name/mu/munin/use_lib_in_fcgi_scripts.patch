@@ -1,0 +1,29 @@
+diff --git a/master/_bin/munin-cgi-graph.in b/master/_bin/munin-cgi-graph.in
+index dffab7d2..1a2ae34b 100755
+--- a/master/_bin/munin-cgi-graph.in
++++ b/master/_bin/munin-cgi-graph.in
+@@ -24,6 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+ use strict;
+ use warnings;
++
++use Config;
++use lib map { /(.*)/ } split /$Config{path_sep}/ => $ENV{PERL5LIB};
++
+ use IO::Handle;
+ use Date::Parse;
+ use POSIX qw(strftime locale_h);
+diff --git a/master/_bin/munin-cgi-html.in b/master/_bin/munin-cgi-html.in
+index a5f209a0..765a2691 100755
+--- a/master/_bin/munin-cgi-html.in
++++ b/master/_bin/munin-cgi-html.in
+@@ -25,6 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ use strict;
+ use warnings;
+ 
++use Config;
++use lib map { /(.*)/ } split /$Config{path_sep}/ => $ENV{PERL5LIB};
++
+ use POSIX qw(strftime);
+ 
+ use CGI::Fast qw(:cgi);
