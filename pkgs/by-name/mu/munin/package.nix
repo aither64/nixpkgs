@@ -88,6 +88,7 @@ stdenv.mkDerivation rec {
 
     ./adding_sconfdir_munin-node.patch
     ./preserve_environment.patch
+    ./use_lib_in_fcgi_scripts.patch
   ];
 
   preBuild = ''
@@ -132,7 +133,7 @@ stdenv.mkDerivation rec {
         ln -s $out/nix-support/propagated-build-inputs $out/nix-support/propagated-user-env-packages
     fi
 
-    for file in "$out"/bin/munindoc "$out"/sbin/munin-* "$out"/lib/munin-* "$out"/www/cgi/*; do
+    for file in "$out"/bin/munindoc "$out"/sbin/munin-* "$out"/lib/munin-* ; do
         # don't wrap .jar files
         case "$file" in
             *.jar) continue;;
@@ -159,6 +160,19 @@ stdenv.mkDerivation rec {
               rrdtool
             ]
           }"
+    done
+
+    for file in "$out"/www/cgi/*; do
+        # don't wrap .jar files
+        case "$file" in
+            *.jar) continue;;
+        esac
+        wrapProgram "$file" \
+          --set PERL5LIB "$out/${perlPackages.perl.libPrefix}:${with perlPackages; makePerlPath [
+                LogLog4perl IOSocketINET6 Socket6 URI DBFile TimeDate
+                HTMLTemplate FileCopyRecursive FCGI CGI CGIFast NetCIDR NetSNMP NetServer
+                ListMoreUtils DBDPg LWP rrdtool
+                ]}"
     done
   '';
 
