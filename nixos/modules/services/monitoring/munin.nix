@@ -20,6 +20,7 @@ let
   muninConf = pkgs.writeText "munin.conf"
     ''
       dbdir     /var/lib/munin
+      cgitmpdir /run/munin/cgi-tmp
       htmldir   /var/www/munin
       logdir    /var/log/munin
       rundir    /run/munin
@@ -316,6 +317,19 @@ in
         '';
       };
 
+      fastcgi = {
+        enableGraph = mkEnableOption "Enable systemd service for munin-cgi-graph";
+
+        enableHtml = mkEnableOption "Enable systemd service for munin-cgi-html";
+
+        socketUser = mkOption {
+          type = types.str;
+          description = ''
+            User which will own the UNIX domain socket, should be set to your web server's user
+          '';
+        };
+      };
+
     };
 
   };
@@ -414,6 +428,40 @@ in
       "/var/log/munin".d = defaultConfig;
       "/var/www/munin".d = defaultConfig;
       "/var/lib/munin".d = defaultConfig;
+    };
+  }) (mkIf (cronCfg.enable && cronCfg.fastcgi.enableGraph) {
+    systemd.services.munin-cgi-graph = {
+      wantedBy = [ "multi-user.target" ];
+      environment.MUNIN_CONFIG = muninConf;
+      serviceConfig = {
+        Type = "forking";
+        Restart = "always";
+        ExecStart = ''${pkgs.spawn_fcgi}/bin/spawn-fcgi \
+          -u munin \
+          -g munin \
+          -U ${cronCfg.fastcgi.socketUser} \
+          -M 0600 \
+          -s /run/munin/fastcgi-graph.sock \
+          -- ${pkgs.munin}/www/cgi/munin-cgi-graph
+        '';
+      };
+    };
+  }) (mkIf (cronCfg.enable && cronCfg.fastcgi.enableHtml) {
+    systemd.services.munin-cgi-html = {
+      wantedBy = [ "multi-user.target" ];
+      environment.MUNIN_CONFIG = muninConf;
+      serviceConfig = {
+        Type = "forking";
+        Restart = "always";
+        ExecStart = ''${pkgs.spawn_fcgi}/bin/spawn-fcgi \
+          -u munin \
+          -g munin \
+          -U ${cronCfg.fastcgi.socketUser} \
+          -M 0600 \
+          -s /run/munin/fastcgi-html.sock \
+          -- ${pkgs.munin}/www/cgi/munin-cgi-html
+        '';
+      };
     };
   })];
 }
