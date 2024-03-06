@@ -49,6 +49,10 @@ in with bepastyPython.pkgs; buildPythonPackage rec {
     sha256 = "sha256-R3bvrl/tOP0S9m6X+MwYK6fMQ51cI6W5AoxyYZ8aZ/w=";
   };
 
+  patches = [
+    ./werkzeug-3.patch
+  ];
+
   nativeCheckInputs = [
     build
     codecov
